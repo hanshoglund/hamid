@@ -1,6 +1,6 @@
 
 name:                   hamid
-version:                0.5
+version:                0.6
 synopsis:               Binding to the OS level MIDI services
 
 description:            Partial implementation of the MIDI 1.0 standard to communicate
@@ -36,8 +36,9 @@ library
         newtype
     hs-source-dirs: src
     exposed-modules:
-        System.MIDI.Base,
         System.MIDI
+    other-modules:
+        System.MIDI.Base
     extensions:
         ForeignFunctionInterface,
         CPP,

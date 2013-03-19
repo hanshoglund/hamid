@@ -19,6 +19,7 @@
 module System.MIDI (
         -- * Messages
         MidiTime,
+        MidiMessage,
         MidiEvent,        
 
         -- * Input and output
@@ -51,8 +52,8 @@ module System.MIDI (
   ) where
 
 import Data.Word (Word8,Word32)
-import System.MIDI.Base hiding (MidiEvent)
-import Control.Newtype
+import System.MIDI.Base hiding (MidiEvent, MidiMessage)
+import System.IO.Unsafe (unsafePerformIO)
 
 import qualified Codec.Midi as C
 
@@ -71,19 +72,18 @@ import qualified System.MIDI.MacOSX as S
 import qualified System.MIDI.Placeholder as S
 #endif
 
-type MidiTime = Word32
-type MidiEvent = (MidiTime, C.Message)
+type MidiTime       = Word32
+type MidiMessage    = C.Message
+type MidiEvent      = (MidiTime, C.Message)
 
 class MidiHasName a where
     name :: a -> IO String
 
 instance MidiHasName Source where
-    name = undefined
-    -- name = S.getName . getSource
+    name = S.getName . getSource
 
 instance MidiHasName Destination where
-    name = undefined
-    -- name = S.getName . getSource
+    name = S.getName . getDestination
     
 
 -- All the definitions in this file are neccessary to be able to have a nice Haddock-generated
@@ -93,11 +93,17 @@ instance MidiHasName Destination where
 
 -- | The opaque data type representing a MIDI source.
 newtype Source = Source { getSource :: S.Source }
-    deriving (Eq, Show)
+    deriving (Eq)
 
 -- | The opaque data type representing a MIDI destination.
 newtype Destination = Destination { getDestination :: S.Destination }
-    deriving (Eq, Show)
+    deriving (Eq)
+
+instance Show Source where
+    show = (\n -> "<Source: "++n++">") . unsafePerformIO . name
+
+instance Show Destination where
+    show = (\n -> "<Destination: "++n++">") . unsafePerformIO . name
 
 -- | The opaque data type representing a MIDI connection.
 newtype Stream = Stream { getStream :: S.Connection }
@@ -191,8 +197,8 @@ expMsg (S.MidiMessage ch (S.NoteOn k v)	        ) = C.NoteOn  ch k v
 expMsg (S.MidiMessage ch (S.CC c v)	            ) = C.ControlChange ch c v
 expMsg (S.MidiMessage ch (S.ProgramChange a)	) = C.ProgramChange ch a
 expMsg (S.MidiMessage ch (S.PitchWheel a)	    ) = C.PitchWheel ch a
-expMsg (S.MidiMessage ch (S.PolyAftertouch k v) ) = undefined
-expMsg (S.MidiMessage ch (S.Aftertouch a)	    ) = undefined
+-- expMsg (S.MidiMessage ch (S.PolyAftertouch k v) ) = undefined
+-- expMsg (S.MidiMessage ch (S.Aftertouch a)        ) = undefined
 -- expMsg (S.SysEx [Word8]                    ) = undefined
 -- expMsg (S.SongPosition p                   ) = undefined
 -- expMsg (S.SongSelect s                         ) = undefined
