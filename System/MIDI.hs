@@ -22,9 +22,11 @@ module System.MIDI (
         Source,
         Destination,
         Connection,
+        MidiTime,
+        MidiEvent,
         
-        enumerateSources,
-        enumerateDestinations,
+        sources,
+        destinations,
 
         MidiHasName(..),
         openSource,
@@ -41,8 +43,10 @@ module System.MIDI (
   ) where
 
 import Data.Word (Word8,Word32)
-import System.MIDI.Base
+import System.MIDI.Base hiding (MidiEvent)
 import Control.Newtype
+
+import qualified Codec.Midi as C
 
 #ifdef mingw32_HOST_OS
 import qualified System.MIDI.Win32 as S
@@ -58,6 +62,9 @@ import qualified System.MIDI.MacOSX as S
 #ifndef HMIDI_SUPPORTED_OS
 import qualified System.MIDI.Placeholder as S
 #endif
+
+type MidiTime = Word32
+type MidiEvent = (MidiTime, C.Message)
 
 class MidiHasName a where
     name :: a -> IO String
@@ -88,12 +95,12 @@ newtype Destination = Destination { getDestination :: S.Destination }
 newtype Connection = Connection { getConnection :: S.Connection }
 
 -- | Enumerates the MIDI sources present in the system.
-enumerateSources :: IO [Source]
-enumerateSources = fmap (fmap Source) S.enumerateSources
+sources :: IO [Source]
+sources = fmap (fmap Source) S.enumerateSources
 
 -- | Enumerates the MIDI destinations present in the system.
-enumerateDestinations :: IO [Destination]
-enumerateDestinations = fmap (fmap Destination) S.enumerateDestinations
+destinations :: IO [Destination]
+destinations = fmap (fmap Destination) S.enumerateDestinations
 
 -- | These functions return the name, model and manufacturer of a MIDI source \/ destination.
 -- 
@@ -109,24 +116,33 @@ getManufacturer = S.getManufacturer
 -- | Opens a MIDI Source.
 -- There are two possibilites to receive MIDI messages. The user can either support a callback function,
 -- or get the messages from an asynchronous buffer. However, mixing the two approaches is not allowed.
-openSource :: Source -> Maybe (MidiEvent -> IO ()) -> IO Connection 
-openSource s cb = fmap Connection $ S.openSource (getSource s) cb
+
+openSource :: Source -> Maybe (MidiTime -> C.Message -> IO ()) -> IO Connection 
+openSource s cb = fmap Connection $ S.openSource (getSource s) (fmap mkCb cb)
+    where
+        mkCb f (S.MidiEvent ts msg) = f ts (expMsg msg)
+
 
 -- | Opens a MIDI Destination.
 openDestination :: Destination -> IO Connection 
 openDestination = fmap Connection . S.openDestination . getDestination
 
+
 -- | Gets the next event from a buffered connection (see also `openSource`)
 getNextEvent :: Connection -> IO (Maybe MidiEvent)
-getNextEvent = S.getNextEvent . getConnection
+getNextEvent = fmap (fmap g) . S.getNextEvent . getConnection
+    where
+        g (S.MidiEvent ts msg) = (ts, expMsg msg)
 
 -- | Gets all the events from the buffer (see also `openSource`)
 getEvents :: Connection -> IO [MidiEvent]
-getEvents = S.getEvents . getConnection
+getEvents = fmap (fmap g) . S.getEvents . getConnection
+    where
+        g (S.MidiEvent ts msg) = (ts, expMsg msg)
         
 -- | Sends a short message. The connection must be a `Destination`.
-send :: Connection -> MidiMessage -> IO ()
-send = S.send . getConnection
+send :: Connection -> C.Message -> IO ()
+send c = S.send (getConnection c) . impMsg
  
 {-
 -- | Sends a system exclusive message. You shouldn't include the starting \/ trailing bytes 0xF0 and 0xF7.
@@ -149,6 +165,48 @@ close :: Connection -> IO ()
 close = S.close . getConnection
  
 -- | Returns the time elapsed since the last `start` call, in milisecs.
-currentTime :: Connection -> IO Word32
+currentTime :: Connection -> IO MidiTime
 currentTime = S.currentTime . getConnection
+
+
+
+impMsg :: C.Message -> S.MidiMessage
+impMsg (C.NoteOff ch k _)       = S.MidiMessage ch (S.NoteOff k)
+impMsg (C.NoteOn  ch k v)       = S.MidiMessage ch (S.NoteOn k v) 
+impMsg (C.ControlChange ch c v) = S.MidiMessage ch (S.CC c v)
+impMsg (C.ProgramChange ch a)   = S.MidiMessage ch (S.ProgramChange a)
+impMsg (C.PitchWheel ch a)      = S.MidiMessage ch (S.PitchWheel a)
+
+expMsg :: S.MidiMessage -> C.Message
+expMsg (S.MidiMessage ch (S.NoteOff k)          ) = C.NoteOff ch k 0
+expMsg (S.MidiMessage ch (S.NoteOn k v)	        ) = C.NoteOn  ch k v
+expMsg (S.MidiMessage ch (S.CC c v)	            ) = C.ControlChange ch c v
+expMsg (S.MidiMessage ch (S.ProgramChange a)	) = C.ProgramChange ch a
+expMsg (S.MidiMessage ch (S.PitchWheel a)	    ) = C.PitchWheel ch a
+expMsg (S.MidiMessage ch (S.PolyAftertouch k v) ) = undefined
+expMsg (S.MidiMessage ch (S.Aftertouch a)	    ) = undefined
+-- expMsg (S.SysEx [Word8]                    ) = undefined
+-- expMsg (S.SongPosition p                   ) = undefined
+-- expMsg (S.SongSelect s                         ) = undefined
+-- expMsg (S.TuneRequest                          ) = undefined
+-- expMsg (S.SRTClock                             ) = undefined
+-- expMsg (S.SRTStart                             ) = undefined
+-- expMsg (S.SRTContinue                          ) = undefined
+-- expMsg (S.SRTStop                              ) = undefined
+-- expMsg (S.ActiveSensing                        ) = undefined
+-- expMsg (S.Reset                                ) = undefined
+-- expMsg (S.Undefined                           ) = undefined
+
+
+
+
+
+
+
+
+
+
+
+
+
  

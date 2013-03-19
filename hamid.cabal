@@ -32,6 +32,7 @@ extra-source-files:     examples/monitor.hs,
 library
     build-depends:
         base        >= 4 && < 5,
+        HCodecs,
         newtype
     exposed-modules:
         System.MIDI.Base,
