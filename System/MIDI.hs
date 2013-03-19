@@ -1,4 +1,7 @@
 
+{-# LANGUAGE CPP, GeneralizedNewtypeDeriving #-}
+
+
 --
 -- Module      : System.MIDI
 -- Version     : 0.1
@@ -13,7 +16,6 @@
 -- | A lowest common denominator interface to the Win32 and MacOSX MIDI bindings. 
 -- Error handling is via `fail`-s in the IO monad. 
 
-{-# LANGUAGE CPP #-}
 module System.MIDI (
         -- module System.MIDI.Base,
 
@@ -40,7 +42,7 @@ module System.MIDI (
 
 import Data.Word (Word8,Word32)
 import System.MIDI.Base
-
+import Control.Newtype
 
 #ifdef mingw32_HOST_OS
 import qualified System.MIDI.Win32 as S
@@ -61,10 +63,12 @@ class MidiHasName a where
     name :: a -> IO String
 
 instance MidiHasName Source where
-    name = S.getName
+    name = undefined
+    -- name = S.getName . getSource
 
 instance MidiHasName Destination where
-    name = S.getName
+    name = undefined
+    -- name = S.getName . getSource
     
 
 -- All the definitions in this file are neccessary to be able to have a nice Haddock-generated
@@ -73,21 +77,23 @@ instance MidiHasName Destination where
 -- at present?) 
 
 -- | The opaque data type representing a MIDI source.
-type Source = S.Source
+newtype Source = Source { getSource :: S.Source }
+    deriving (Eq, Show)
 
 -- | The opaque data type representing a MIDI destination.
-type Destination = S.Destination
+newtype Destination = Destination { getDestination :: S.Destination }
+    deriving (Eq, Show)
 
 -- | The opaque data type representing a MIDI connection.
-type Connection = S.Connection
+newtype Connection = Connection { getConnection :: S.Connection }
 
 -- | Enumerates the MIDI sources present in the system.
 enumerateSources :: IO [Source]
-enumerateSources = S.enumerateSources
+enumerateSources = fmap (fmap Source) S.enumerateSources
 
 -- | Enumerates the MIDI destinations present in the system.
 enumerateDestinations :: IO [Destination]
-enumerateDestinations = S.enumerateDestinations
+enumerateDestinations = fmap (fmap Destination) S.enumerateDestinations
 
 -- | These functions return the name, model and manufacturer of a MIDI source \/ destination.
 -- 
@@ -103,24 +109,24 @@ getManufacturer = S.getManufacturer
 -- | Opens a MIDI Source.
 -- There are two possibilites to receive MIDI messages. The user can either support a callback function,
 -- or get the messages from an asynchronous buffer. However, mixing the two approaches is not allowed.
-openSource :: Source -> Maybe ClientCallback -> IO Connection 
-openSource = S.openSource
+openSource :: Source -> Maybe (MidiEvent -> IO ()) -> IO Connection 
+openSource s cb = fmap Connection $ S.openSource (getSource s) cb
 
 -- | Opens a MIDI Destination.
 openDestination :: Destination -> IO Connection 
-openDestination = S.openDestination
+openDestination = fmap Connection . S.openDestination . getDestination
 
 -- | Gets the next event from a buffered connection (see also `openSource`)
 getNextEvent :: Connection -> IO (Maybe MidiEvent)
-getNextEvent = S.getNextEvent
+getNextEvent = S.getNextEvent . getConnection
 
 -- | Gets all the events from the buffer (see also `openSource`)
 getEvents :: Connection -> IO [MidiEvent]
-getEvents = S.getEvents
+getEvents = S.getEvents . getConnection
         
 -- | Sends a short message. The connection must be a `Destination`.
 send :: Connection -> MidiMessage -> IO ()
-send = S.send
+send = S.send . getConnection
  
 {-
 -- | Sends a system exclusive message. You shouldn't include the starting \/ trailing bytes 0xF0 and 0xF7.
@@ -132,17 +138,17 @@ sendSysEx = S.sendSysEx
  
 -- | Starts a connection. This is required for receiving MIDI messages, and also for starting the clock.
 start :: Connection -> IO ()
-start = S.start
+start = S.start . getConnection
 
 -- | Stops a connection.
 stop :: Connection -> IO ()
-stop = S.stop
+stop = S.stop . getConnection
     
 -- | Closes a MIDI Connection.
 close :: Connection -> IO ()
-close = S.close
+close = S.close . getConnection
  
 -- | Returns the time elapsed since the last `start` call, in milisecs.
 currentTime :: Connection -> IO Word32
-currentTime = S.currentTime
+currentTime = S.currentTime . getConnection
  
