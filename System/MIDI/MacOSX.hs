@@ -11,10 +11,7 @@ module System.MIDI.MacOSX
     , enumerateSources
     , enumerateDestinations
     
-    , MIDIHasName  
-    , getName
-    , getModel
-    , getManufacturer
+    , MIDIHasName(..)  
 
     , openSource
     , openDestination

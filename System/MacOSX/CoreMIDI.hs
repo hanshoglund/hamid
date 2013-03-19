@@ -9,10 +9,10 @@ module System.MacOSX.CoreMIDI
       enumerateDevices
     , enumerateSources
     , enumerateDestinations
-    , MIDIHasName
-    , getName
-    , getModel
-    , getManufacturer
+    , MIDIHasName(..)
+    -- , getName
+    -- , getModel
+    -- , getManufacturer
     , newSource
     , newDestination
     , disposeEndpoint

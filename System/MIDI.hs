@@ -14,36 +14,33 @@
 -- Error handling is via `fail`-s in the IO monad. 
 
 {-# LANGUAGE CPP #-}
-module System.MIDI 
-    ( module System.MIDI.Base
+module System.MIDI (
+        -- module System.MIDI.Base,
 
-    , Source
-    , Destination
-    , Connection
- 
-    , enumerateSources
-    , enumerateDestinations
-    
-    , getName
-    , getModel
-    , getManufacturer
+        Source,
+        Destination,
+        Connection,
+        
+        enumerateSources,
+        enumerateDestinations,
 
-    , openSource
-    , openDestination
-    , close
-    , send
-    -- , sendSysEx
-    , start
-    , stop
-    
-    , getNextEvent
-    , getEvents
-    , currentTime
-    
-    ) where
+        MidiHasName(..),
+        openSource,
+        openDestination,
+        close,
+        send,
+        -- sendSysEx,
+
+        start,
+        stop,
+        getNextEvent,
+        getEvents,
+        currentTime,    
+  ) where
 
 import Data.Word (Word8,Word32)
 import System.MIDI.Base
+
 
 #ifdef mingw32_HOST_OS
 import qualified System.MIDI.Win32 as S
@@ -59,6 +56,16 @@ import qualified System.MIDI.MacOSX as S
 #ifndef HMIDI_SUPPORTED_OS
 import qualified System.MIDI.Placeholder as S
 #endif
+
+class MidiHasName a where
+    name :: a -> IO String
+
+instance MidiHasName Source where
+    name = S.getName
+
+instance MidiHasName Destination where
+    name = S.getName
+    
 
 -- All the definitions in this file are neccessary to be able to have a nice Haddock-generated
 -- documentation independently of the platform. Though I still don't know how to generate documentation
