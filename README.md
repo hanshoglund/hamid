@@ -1,9 +1,11 @@
 
 # hamid
 
-Cross-platform Midi for Haskell. Forked from the `system-midi` package.
+Cross-platform Midi for Haskell. Forked from the `hmidi` package. 
 
 Modified to be compatible with `hcodecs` and hide implementation.
+
+No Linux support yet, see `alsa-seq`, `jack`, or `PortMidi`.
 
 (c) Balazs Komuves, Hans Höglund 2008-2013.
 
