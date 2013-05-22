@@ -1,6 +1,6 @@
 
 name:                   hamid
-version:                0.6
+version:                0.7
 synopsis:               Binding to the OS level MIDI services
 
 description:            Partial implementation of the MIDI 1.0 standard to communicate
