@@ -1,34 +1,36 @@
 
-name:                   hamid
-version:                0.7
-synopsis:               Binding to the OS level MIDI services
+name:               hamid
+version:            0.8
+cabal-version:      >= 1.6
+synopsis:           Binding to the OS level MIDI services (fork of system-midi).
 
-description:            Partial implementation of the MIDI 1.0 standard to communicate
-                        with physical or virtual MIDI devices, eg. MIDI keyboards.
-                        Supported operating systems are Mac OS X and Win32 (not tested
-                        under Leopard and Vista). See also the alsa-midi library for similar
-                        function under Linux. Please note that there was no effort made (yet) to
-                        be compatible with the other existing Haskell MIDI libraries.
+description:        Cross-platform binding to Midi libraries. 
+                    Supports OS X and Windows (limited testing).
+                    
+                    The API use the same represeentation as Codec.Midi so system
+                    and file I/O have the same interface.
 
-                        Fork by Hans Höglund, adding support for Codec.Midi types et al.
+                    This package was based on the system-midi package.
 
-license:                BSD3
-license-file:           LICENSE
-author:                 Balazs Komuves
-copyright:              (c) 2008 Balazs Komuves
-maintainer:             hans@hanshoglund.se
-stability:              Unstable
-category:               Sound, System
-tested-with:            GHC == 6.8.2
-cabal-version:          >= 1.2
-build-type:             Simple
+license:            BSD3
+license-file:       LICENSE
+author:             Balazs Komuves, Hans Hoglund
+copyright:          (c) 2008-2012 Balazs Komuves, Hans Hoglund
+maintainer:         Hans Hoglund <hans@hanshoglund.se>
+stability:          Stable
+category:           Sound, System
+build-type:         Simple
 
-extra-source-files:     examples/monitor.hs, 
-                        examples/chords.hs, 
-                        examples/playmidi.hs,
-                        examples/SMF.hs, 
-                        examples/GM.hs
+extra-source-files: examples/monitor.hs, 
+                    examples/chords.hs, 
+                    examples/playmidi.hs,
+                    examples/SMF.hs, 
+                    examples/GM.hs
 
+source-repository head
+  type:             git
+  location:         git://github.com/hanshoglund/hamid.git
+  
 library
     build-depends:
         base        >= 4 && < 5,
@@ -45,8 +47,6 @@ library
         TypeSynonymInstances,
         FlexibleInstances,
         EmptyDataDecls
-    ghc-options:
-        -threaded
 
     if os(darwin)
         other-modules:
@@ -68,7 +68,7 @@ library
         extra-libraries:
             winmm
 
-    if !os(darwin) && !   os(windows)
+    if !os(darwin) && !os(windows)
         other-modules:
             System.MIDI.Placeholder
 
