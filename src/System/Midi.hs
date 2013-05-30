@@ -3,7 +3,7 @@
 
 
 --
--- Module      : System.MIDI
+-- Module      : System.Midi
 -- Version     : 0.1
 -- License     : BSD3
 -- Author      : Balazs Komuves
@@ -13,10 +13,10 @@
 -- Tested with : GHC 6.8.2
 --
 
--- | A lowest common denominator interface to the Win32 and MacOSX MIDI bindings. 
+-- | A lowest common denominator interface to the Win32 and MacOSX Midi bindings. 
 -- Error handling is via `fail`-s in the IO monad. 
 
-module System.MIDI (
+module System.Midi (
         -- * Messages
         MidiTime,
         MidiMessage,
@@ -52,24 +52,24 @@ module System.MIDI (
   ) where
 
 import Data.Word (Word8,Word32)
-import System.MIDI.Base hiding (MidiEvent, MidiMessage)
+import System.Midi.Base hiding (MidiEvent, MidiMessage)
 import System.IO.Unsafe (unsafePerformIO)
 
 import qualified Codec.Midi as C
 
 #ifdef mingw32_HOST_OS
-import qualified System.MIDI.Win32 as S
-#define HMIDI_SUPPORTED_OS
+import qualified System.Midi.Win32 as S
+#define HMidi_SUPPORTED_OS
 #endif
 
 #ifdef darwin_HOST_OS
-import qualified System.MIDI.MacOSX as S
-#define HMIDI_SUPPORTED_OS
+import qualified System.Midi.MacOSX as S
+#define HMidi_SUPPORTED_OS
 #endif
 
 -- this is just to be able to produce a Haddock documentation on a not supported system (eg. Linux)
-#ifndef HMIDI_SUPPORTED_OS
-import qualified System.MIDI.Placeholder as S
+#ifndef HMidi_SUPPORTED_OS
+import qualified System.Midi.Placeholder as S
 #endif
 
 type MidiTime       = Word32
@@ -91,11 +91,11 @@ instance MidiHasName Destination where
 -- for a platform-specific module while being on an a different platform (probably not at all possible 
 -- at present?) 
 
--- | The opaque data type representing a MIDI source.
+-- | The opaque data type representing a Midi source.
 newtype Source = Source { getSource :: S.Source }
     deriving (Eq)
 
--- | The opaque data type representing a MIDI destination.
+-- | The opaque data type representing a Midi destination.
 newtype Destination = Destination { getDestination :: S.Destination }
     deriving (Eq)
 
@@ -105,30 +105,30 @@ instance Show Source where
 instance Show Destination where
     show = (\n -> "<Destination: "++n++">") . unsafePerformIO . name
 
--- | The opaque data type representing a MIDI connection.
+-- | The opaque data type representing a Midi connection.
 newtype Stream = Stream { getStream :: S.Connection }
 
--- | Enumerates the MIDI sources present in the system.
+-- | Enumerates the Midi sources present in the system.
 sources :: IO [Source]
 sources = fmap (fmap Source) S.enumerateSources
 
--- | Enumerates the MIDI destinations present in the system.
+-- | Enumerates the Midi destinations present in the system.
 destinations :: IO [Destination]
 destinations = fmap (fmap Destination) S.enumerateDestinations
 
--- | These functions return the name, model and manufacturer of a MIDI source \/ destination.
+-- | These functions return the name, model and manufacturer of a Midi source \/ destination.
 -- 
 -- Note: On Win32, only `getName` returns a somewhat meaningful string at the moment.
-getName :: S.MIDIHasName a => a -> IO String
-getModel :: S.MIDIHasName a => a -> IO String
-getManufacturer :: S.MIDIHasName a => a -> IO String
+getName :: S.MidiHasName a => a -> IO String
+getModel :: S.MidiHasName a => a -> IO String
+getManufacturer :: S.MidiHasName a => a -> IO String
 
 getName = S.getName
 getModel = S.getModel
 getManufacturer = S.getManufacturer
 
--- | Opens a MIDI Source.
--- There are two possibilites to receive MIDI messages. The user can either support a callback function,
+-- | Opens a Midi Source.
+-- There are two possibilites to receive Midi messages. The user can either support a callback function,
 -- or get the messages from an asynchronous buffer. However, mixing the two approaches is not allowed.
 
 openSource :: Source -> Maybe (MidiTime -> C.Message -> IO ()) -> IO Stream 
@@ -137,7 +137,7 @@ openSource s cb = fmap Stream $ S.openSource (getSource s) (fmap mkCb cb)
         mkCb f (S.MidiEvent ts msg) = f ts (expMsg msg)
 
 
--- | Opens a MIDI Destination.
+-- | Opens a Midi Destination.
 openDestination :: Destination -> IO Stream 
 openDestination = fmap Stream . S.openDestination . getDestination
 
@@ -166,7 +166,7 @@ sendSysEx :: Stream -> [Word8] -> IO ()
 sendSysEx = S.sendSysEx
 -}
  
--- | Starts a connection. This is required for receiving MIDI messages, and also for starting the clock.
+-- | Starts a connection. This is required for receiving Midi messages, and also for starting the clock.
 start :: Stream -> IO ()
 start = S.start . getStream
 
@@ -174,7 +174,7 @@ start = S.start . getStream
 stop :: Stream -> IO ()
 stop = S.stop . getStream
     
--- | Closes a MIDI Stream.
+-- | Closes a Midi Stream.
 close :: Stream -> IO ()
 close = S.close . getStream
  

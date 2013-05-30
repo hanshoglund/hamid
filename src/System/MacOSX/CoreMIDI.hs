@@ -1,15 +1,15 @@
 
--- |Low-level binding to the CoreMIDI services present in Mac OS X.
+-- |Low-level binding to the CoreMidi services present in Mac OS X.
 -- Error handling is via `fail`-s in the IO monad. 
 
 {-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls #-}
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
-module System.MacOSX.CoreMIDI 
+module System.MacOSX.CoreMidi 
     (
       enumerateDevices
     , enumerateSources
     , enumerateDestinations
-    , MIDIHasName(..)
+    , MidiHasName(..)
     -- , getName
     -- , getModel
     -- , getManufacturer
@@ -64,7 +64,7 @@ import Foreign hiding (unsafePerformIO)
 import Foreign.Marshal
 import System.IO.Unsafe
 
-import System.MIDI.Base
+import System.Midi.Base
 import System.MacOSX.CoreFoundation
 
 data OpaqueMIDIClient
@@ -252,7 +252,7 @@ instance MIDIObject Source      where midiObject (Source src) = castPtr src
 instance MIDIObject Destination where midiObject (Destination dst) = castPtr dst
 
 -- |MIDI objects which can have a name, model name and manufacturer
-class MIDIObject a => MIDIHasName a where
+class MIDIObject a => MidiHasName a where
     getName         :: a -> IO String
     getModel        :: a -> IO String
     getManufacturer :: a -> IO String
@@ -261,12 +261,12 @@ class MIDIObject a => MIDIHasName a where
     getModel = genericGetModel . midiObject
     getManufacturer = genericGetManufacturer . midiObject
 
-instance MIDIHasName MIDIDeviceRef
-instance MIDIHasName MIDIEntityRef
-instance MIDIHasName MIDIPortRef
-instance MIDIHasName MIDIEndpointRef
-instance MIDIHasName Source
-instance MIDIHasName Destination
+instance MidiHasName MIDIDeviceRef
+instance MidiHasName MIDIEntityRef
+instance MidiHasName MIDIPortRef
+instance MidiHasName MIDIEndpointRef
+instance MidiHasName Source
+instance MidiHasName Destination
 
 genericGetName obj         = midiObjectGetStringProperty obj kMIDIPropertyName
 genericGetModel obj        = midiObjectGetStringProperty obj kMIDIPropertyModel

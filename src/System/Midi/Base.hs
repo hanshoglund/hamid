@@ -1,8 +1,8 @@
 
--- |The hardware-independent part of the MIDI binding.
+-- |The hardware-independent part of the Midi binding.
 
 {-# LANGUAGE CPP #-}
-module System.MIDI.Base 
+module System.Midi.Base 
     ( TimeStamp
     , MidiMessage'(..)
     , MidiMessage(..)
@@ -19,10 +19,10 @@ import Data.Word
 
 type TimeStamp = Word32 
 
--- |A \"regular\" MIDI message.
+-- |A \"regular\" Midi message.
 --
 -- Remark: `NoteOff` not having a velocity field is a design decision, and a questionable one. According to the
--- MIDI standard, NoteOff also has a velocity. However, most keyboards do not use this feature (send the default
+-- Midi standard, NoteOff also has a velocity. However, most keyboards do not use this feature (send the default
 -- value 64), and there are keyboards which do not send NoteOff messages at all, but send NoteOn messages with
 -- zero velocity instead (for example the EMU Xboard series). I don't know what would be a good solution. 
 -- At the moment, the code auto-translates NoteOn messages with zero velocity to NoteOff messages, and the
@@ -37,9 +37,9 @@ data MidiMessage'
     | PitchWheel      !Int          -- ^ Pitch wheel (value, from -8192..+8191)
     deriving (Show,Eq)
     
--- |The type representing a MIDI message.  
+-- |The type representing a Midi message.  
 data MidiMessage 
-    = MidiMessage  !Int !MidiMessage'    -- ^ first argument is the MIDI channel (1..16)
+    = MidiMessage  !Int !MidiMessage'    -- ^ first argument is the Midi channel (1..16)
     | SysEx        [Word8]               -- ^ not including the bytes 0xf0, 0xf7
     | SongPosition !Int
     | SongSelect   !Int 
@@ -53,8 +53,8 @@ data MidiMessage
     | Undefined
     deriving (Show,Eq)
     
--- |The type representing a timestamped MIDI message. 
--- Time is measured in milisecs elapsed since the last call to `System.MIDI.start`.
+-- |The type representing a timestamped Midi message. 
+-- Time is measured in milisecs elapsed since the last call to `System.Midi.start`.
 data MidiEvent = MidiEvent !TimeStamp !MidiMessage deriving (Show,Eq)
 
 -- |Type of the user callback function.  
@@ -70,7 +70,7 @@ translateShortMessage (ShortMessage chn msg bt1 bt2) =
       v = fromIntegral bt2
 
 translate' msg k v = case msg of
-#ifdef HMIDI_NO_NOTEOFF
+#ifdef HMidi_NO_NOTEOFF
      8  -> NoteOn k 0
      9  -> NoteOn k v
 #else

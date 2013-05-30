@@ -1,5 +1,5 @@
 
--- |Partial binding to CoreFoundation, as required for `System.MIDI`. 
+-- |Partial binding to CoreFoundation, as required for `System.Midi`. 
 -- At the moment only CFString is supported.
 -- In the future this module should grow into a separate entity.
 

@@ -1,8 +1,8 @@
 
--- |A lowest common denominator interface to the Win32 and MacOSX MIDI bindings, MacOSX part.
+-- |A lowest common denominator interface to the Win32 and MacOSX Midi bindings, MacOSX part.
 
-module System.MIDI.MacOSX
-    ( module System.MIDI.Base
+module System.Midi.MacOSX
+    ( module System.Midi.Base
 
     , Source
     , Destination
@@ -11,7 +11,7 @@ module System.MIDI.MacOSX
     , enumerateSources
     , enumerateDestinations
     
-    , MIDIHasName(..)  
+    , MidiHasName(..)  
 
     , openSource
     , openDestination
@@ -27,7 +27,7 @@ module System.MIDI.MacOSX
     
     ) where
 
-import System.MIDI.Base
+import System.Midi.Base
 
 import Control.Monad
 import Control.Concurrent.MVar
@@ -39,7 +39,7 @@ import System.IO.Unsafe
 
 import System.MacOSX.CoreFoundation
 import System.MacOSX.CoreAudio
-import System.MacOSX.CoreMIDI
+import System.MacOSX.CoreMidi
 
 -- |Gets all the events from the buffer.
 getEvents :: Connection -> IO [MidiEvent]
@@ -67,7 +67,7 @@ type Client      = MIDIClientRef
 type Device      = MIDIDeviceRef
 type Port        = MIDIPortRef
 
--- |The opaque data type representing a MIDI connection
+-- |The opaque data type representing a Midi connection
 data Connection = Connection
     { cn_isInput     :: Bool
     , cn_port        :: MIDIPortRef
@@ -97,7 +97,7 @@ getClient = do
     b <- isEmptyMVar client
     if b 
       then do
-        x <- newClient "HaskellMidi" 
+        x <- newClient "HaskellMIDI" 
         putMVar client x
 {-
 #ifdef __GLASGOW_HASKELL__
@@ -122,8 +122,8 @@ convertShortMessage t0 (ts',bytes) = do
     ts <- audioConvertHostTimeToNanos ts'
     return $ MidiEvent (nanoToMili $ ts-t0) (translateShortMessage $ decodeShortMessage bytes) 
 
-myMIDIReadProc :: Ptr MIDIPacket -> Ptr () -> Ptr () -> IO ()
-myMIDIReadProc packets myptr _  = do
+myMidiReadProc :: Ptr MIDIPacket -> Ptr () -> Ptr () -> IO ()
+myMidiReadProc packets myptr _  = do
     let stabptr = castPtrToStablePtr myptr :: StablePtr (MVar Connection)
     mv <- deRefStablePtr stabptr :: IO (MVar Connection)
     mconn <- tryTakeMVar mv  -- we are also "blocking" (handling) further callbacks this way
@@ -143,8 +143,8 @@ myMIDIReadProc packets myptr _  = do
           Right call -> mapM_ call events 
         putMVar mv conn      -- do not forget to put it back!
 
--- |Opens a MIDI Source.
--- There are two possibilites to receive MIDI messages. The user can either support a callback function,
+-- |Opens a Midi Source.
+-- There are two possibilites to receive Midi messages. The user can either support a callback function,
 -- or get the messages from an asynchronous buffer. However, mixing the two approaches is not allowed.
 openSource :: Source -> Maybe ClientCallback -> IO Connection 
 openSource src@(Source endpoint) mcallback = do
@@ -153,7 +153,7 @@ openSource src@(Source endpoint) mcallback = do
     
     myData <- newEmptyMVar :: IO (MVar Connection)
     sp <- newStablePtr myData 
-    the_callback <- mkMIDIReadProc myMIDIReadProc
+    the_callback <- mkMIDIReadProc myMidiReadProc
 
     time  <- newEmptyMVar 
     alive <- newMVar True
@@ -168,7 +168,7 @@ openSource src@(Source endpoint) mcallback = do
     putMVar myData conn
     return conn 
 
--- |Opens a MIDI Destination.
+-- |Opens a Midi Destination.
 openDestination :: Destination -> IO Connection 
 openDestination dst@(Destination endpoint) = do
 
@@ -193,7 +193,7 @@ send conn msg = sendShortMessage conn (untranslateShortMessage msg)
 sendSysEx :: Connection -> [Word8] -> IO ()
 sendSysEx conn dat = midiSendSysEx (cn_endpoint conn) dat 
  
--- |Starts a connection. This is required for receiving MIDI messages, and also for starting the clock.
+-- |Starts a connection. This is required for receiving Midi messages, and also for starting the clock.
 start :: Connection -> IO ()
 start conn = do 
     b <- isEmptyMVar (cn_time conn)
@@ -218,7 +218,7 @@ stop conn = do
           False -> return ()
       else putStrLn "warning: you shouldn't call stop twice"  
     
--- |Closes a MIDI Connection
+-- |Closes a Midi Connection
 close conn = do
     when (cn_isInput conn) $ do
       b <- isEmptyMVar (cn_time conn)

@@ -1,8 +1,8 @@
 
--- |A lowest common denominator interface to the Win32 and MacOSX MIDI bindings, Win32 part. 
+-- |A lowest common denominator interface to the Win32 and MacOSX Midi bindings, Win32 part. 
 
-module System.MIDI.Win32 
-    ( module System.MIDI.Base
+module System.Midi.Win32 
+    ( module System.Midi.Base
 
     , Source
     , Destination
@@ -11,7 +11,7 @@ module System.MIDI.Win32
     , enumerateSources
     , enumerateDestinations
     
-    , MIDIHasName
+    , MidiHasName
     , getName
     , getModel
     , getManufacturer
@@ -38,9 +38,9 @@ import Foreign.StablePtr
 import System.IO.Unsafe
 
 import System.Win32.Types
-import System.Win32.MIDI 
+import System.Win32.Midi 
 
-import System.MIDI.Base
+import System.Midi.Base
 
 -- |Gets all the events from the buffer.
 getEvents :: Connection -> IO [MidiEvent]
@@ -69,15 +69,15 @@ waitFor check = do
     b <- check
     unless b $ waitFor check
 
--- |The opaque data type representing a MIDI connection.
+-- |The opaque data type representing a Midi connection.
 data Connection = Connection 
     { cn_isInput    :: Bool
-    , cn_handle     :: HMIDI
+    , cn_handle     :: HMidi
     , cn_time       :: MVar Word32  -- measured in milisecs  
     , cn_fifo_cb    :: Either (Chan MidiEvent) ClientCallback
-    , cn_midiproc   :: FunPtr (MIDIINPROC ())
+    , cn_midiproc   :: FunPtr (MidiINPROC ())
     , cn_mydata     :: StablePtr (MVar Connection)
-    , cn_inbuf      :: MVar (Ptr MIDIHDR)
+    , cn_inbuf      :: MVar (Ptr MidiHDR)
     , cn_sysex      :: Chan Word8   -- channel for temporarily storing sysex messages (they can be arbritrary long, but the buffer has fixed size)
     , cn_alive      :: MVar Bool
     } 
@@ -89,7 +89,7 @@ currentTime conn = do
     t0 <- readMVar (cn_time conn)
     return (t-t0)
 
-myMidiCallback :: HMIDIIN -> UINT -> Ptr () -> DWORD -> DWORD -> IO ()
+myMidiCallback :: HMidiIN -> UINT -> Ptr () -> DWORD -> DWORD -> IO ()
 myMidiCallback hmidi msg' myptr param1 param2 = do
     let stabptr = castPtrToStablePtr myptr :: StablePtr (MVar Connection)
     mv <- deRefStablePtr stabptr :: IO (MVar Connection)
@@ -108,7 +108,7 @@ myMidiCallback hmidi msg' myptr param1 param2 = do
               Right call -> call event 
 
           MIM_LONGDATA -> do
-            let ptr = wordPtrToPtr (fromIntegral param1) :: Ptr MIDIHDR
+            let ptr = wordPtrToPtr (fromIntegral param1) :: Ptr MidiHDR
             q <- peek (castPtr ptr            ) :: IO (Ptr Word8)
             n <- peek (castPtr ptr `plusPtr` 8) :: IO DWORD
             dat <- peekArray (fromIntegral n) q 
@@ -167,14 +167,14 @@ processSysEx chan dat = do
     
 midiInBufferSize = 64
 
--- |Opens a MIDI source.
--- There are two possibilites to receive MIDI messages. The user can either support a callback function,
+-- |Opens a Midi source.
+-- There are two possibilites to receive Midi messages. The user can either support a callback function,
 -- or get the messages from an asynchronous buffer. However, mixing the two approaches is not allowed.
 openSource :: Source -> Maybe ClientCallback -> IO Connection  
 openSource src mcallback = do
     myData <- newEmptyMVar :: IO (MVar Connection)
     sp <- newStablePtr myData 
-    the_callback <- mkMIDIPROC myMidiCallback
+    the_callback <- mkMidiPROC myMidiCallback
     alive <- newMVar True
     fifo_cb <- case mcallback of
       Just cb -> return $ Right cb
@@ -187,7 +187,7 @@ openSource src mcallback = do
     putMVar myData conn
     return conn 
     
--- |Opens a MIDI destination.
+-- |Opens a Midi destination.
 openDestination :: Destination -> IO Connection  
 openDestination dst = do
     alive <- newMVar True
@@ -213,7 +213,7 @@ sendSysEx conn msg = do
       True  -> fail "sending SysEx messages to midi sources is not supported under Win32"
       False -> midiOutSendSysEx handle msg
 
--- |Starts a connection. This is required for receiving MIDI messages, and also for starting the clock.
+-- |Starts a connection. This is required for receiving Midi messages, and also for starting the clock.
 start :: Connection -> IO ()
 start conn = do
     let handle = cn_handle conn
@@ -230,7 +230,7 @@ start conn = do
           False -> return ()
       else putStrLn "warning: you shouldn't call start twice"  
 
--- |Starts a connection. This is required for receiving MIDI messages, and also for starting the clock.
+-- |Starts a connection. This is required for receiving Midi messages, and also for starting the clock.
 stop :: Connection -> IO ()
 stop conn = do 
     let handle = cn_handle conn

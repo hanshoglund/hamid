@@ -1,5 +1,5 @@
 
--- |Partial binding to CoreAudio, as required for `System.MIDI`. 
+-- |Partial binding to CoreAudio, as required for `System.Midi`. 
 -- At the moment only HostTime is supported. 
 -- In the future this module should grow into a separate entity.
 

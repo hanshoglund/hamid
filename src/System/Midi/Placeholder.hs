@@ -1,8 +1,8 @@
 
 -- | This is just to be able to produce a Haddock documentation on a Linux system
 
-module System.MIDI.Placeholder
-    ( module System.MIDI.Base
+module System.Midi.Placeholder
+    ( module System.Midi.Base
 
     , Source
     , Destination
@@ -11,7 +11,7 @@ module System.MIDI.Placeholder
     , enumerateSources
     , enumerateDestinations
     
-    , MIDIHasName
+    , MidiHasName
     , getName
     , getModel
     , getManufacturer
@@ -30,7 +30,7 @@ module System.MIDI.Placeholder
     
     ) where
 
-import System.MIDI.Base
+import System.Midi.Base
 
 data Source                 = Source      deriving (Eq, Ord, Show)
 data Destination            = Destination deriving (Eq, Ord, Show)
@@ -39,7 +39,7 @@ data Connection             = Connection  deriving (Eq, Ord, Show)
 enumerateSources            = noImpl
 enumerateDestinations       = noImpl
 
-class MIDIHasName a where
+class MidiHasName a where
 getName                     = noImpl 
 getManufacturer             = noImpl 
 getModel                    = noImpl 

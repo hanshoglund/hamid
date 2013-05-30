@@ -1,6 +1,6 @@
 
 name:               hamid
-version:            0.9
+version:            0.10
 cabal-version:      >= 1.6
 synopsis:           Binding to the OS level Midi services (fork of system-midi).
 

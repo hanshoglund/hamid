@@ -3,12 +3,12 @@
 -- Error handling is via `fail`-s in the IO monad. 
 
 {-# LANGUAGE ForeignFunctionInterface, EmptyDataDecls #-}
-module System.Win32.MIDI 
+module System.Win32.Midi 
     ( Source(..)
     , Destination(..)
     , enumerateSources
     , enumerateDestinations
-    , MIDIHasName
+    , MidiHasName
     , getName
     , getModel
     , getManufacturer
