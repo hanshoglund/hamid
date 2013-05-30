@@ -1,8 +1,8 @@
 
 name:               hamid
-version:            0.8
+version:            0.9
 cabal-version:      >= 1.6
-synopsis:           Binding to the OS level MIDI services (fork of system-midi).
+synopsis:           Binding to the OS level Midi services (fork of system-midi).
 
 description:        Cross-platform binding to Midi libraries. 
                     Supports OS X and Windows (limited testing).
@@ -33,14 +33,14 @@ source-repository head
   
 library
     build-depends:
-        base        >= 4 && < 5,
-        HCodecs,
-        newtype
+        base        >= 4     && < 5,
+        HCodecs     >= 0.2.2 && < 1,
+        newtype     >= 0.2   && < 1
     hs-source-dirs: src
     exposed-modules:
-        System.MIDI
+        System.Midi
     other-modules:
-        System.MIDI.Base
+        System.Midi.Base
     extensions:
         ForeignFunctionInterface,
         CPP,
@@ -52,25 +52,25 @@ library
         other-modules:
             System.MacOSX.CoreFoundation,
             System.MacOSX.CoreAudio,
-            System.MacOSX.CoreMIDI
-            System.MIDI.MacOSX
+            System.MacOSX.CoreMidi
+            System.Midi.MacOSX
         frameworks:
             CoreFoundation,
             CoreAudio,
-            CoreMIDI
+            CoreMidi
 
     if os(windows)
         build-depends:
             Win32
         other-modules:
-            System.Win32.MIDI
-            System.MIDI.Win32
+            System.Win32.Midi
+            System.Midi.Win32
         extra-libraries:
             winmm
 
     if !os(darwin) && !os(windows)
         other-modules:
-            System.MIDI.Placeholder
+            System.Midi.Placeholder
 
 
 
